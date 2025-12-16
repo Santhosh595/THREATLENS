@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ThreatLens</title>
+
+<style>
+body {
+    background: radial-gradient(circle at top, #020617, #000);
+    font-family: Consolas, monospace;
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #e5e7eb;
+}
+
+.panel {
+    width: 980px;
+    padding: 30px;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #020617, #000);
+    border: 2px solid #22d3ee;
+    box-shadow: 0 0 40px rgba(0,255,255,0.25);
+}
+
+/* HEADER */
+.header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 32px;
+    color: #22d3ee;
+    animation: glow 3s infinite alternate;
+}
+
+.header p {
+    margin-top: 6px;
+    opacity: 0.7;
+}
+
+@keyframes glow {
+    from { text-shadow: 0 0 8px rgba(34,211,238,0.4); }
+    to { text-shadow: 0 0 18px rgba(34,211,238,0.9); }
+}
+
+/* SEARCH */
+.search-area {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+input {
+    width: 480px;
+    padding: 14px;
+    background: #020617;
+    border: 1px solid #22d3ee;
+    border-radius: 8px;
+    color: white;
+}
+
+button {
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #22d3ee, #38bdf8);
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:hover {
+    transform: scale(1.06);
+    box-shadow: 0 0 14px rgba(56,189,248,0.7);
+}
+
+/* CAUTION */
+.caution {
+    margin: 18px auto;
+    padding: 16px;
+    max-width: 780px;
+    background: rgba(15,23,42,0.9);
+    border-left: 5px solid #38bdf8;
+    font-size: 14px;
+}
+
+/* ANALYSIS */
+.analysis {
+    margin-top: 25px;
+    padding: 22px;
+    background: rgba(15,23,42,0.9);
+    border-radius: 14px;
+    border: 1px solid rgba(34,211,238,0.4);
+    animation: fadeUp 0.6s ease;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* RISK BAR */
+.risk-bar {
+    margin: 10px 0 18px;
+    height: 8px;
+    border-radius: 10px;
+    background: #020617;
+    border: 1px solid #22d3ee;
+    overflow: hidden;
+}
+
+.risk-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #facc15, #ef4444);
+    animation: pulse 2s infinite alternate;
+}
+
+@keyframes pulse {
+    from { filter: brightness(1); }
+    to { filter: brightness(1.25); }
+}
+
+/* TAGS */
+.tag {
+    display: inline-block;
+    margin: 4px;
+    padding: 5px 9px;
+    border-radius: 6px;
+    background: rgba(34,211,238,0.15);
+}
+
+.safe { color: #22c55e; }
+.warn { color: #facc15; }
+.danger { color: #f87171; }
+
+/* RIZZBOT */
+.rizz-board {
+    margin-top: 35px;
+    padding: 22px;
+    border-radius: 16px;
+    background: rgba(2,6,23,0.95);
+    border: 1px dashed #22d3ee;
+    text-align: center;
+    animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+    100% { transform: translateY(0); }
+}
+
+.rizz-title {
+    font-size: 18px;
+    color: #22d3ee;
+}
+
+.rizz-buttons {
+    margin-top: 14px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+}
+
+.rizz-line {
+    margin-top: 16px;
+    font-size: 16px;
+    min-height: 28px;
+    animation: fadeUp 0.3s ease;
+}
+</style>
+
+<body>
+
+<div class="panel">
+
+    <div class="header">
+        <h1>THREATLENS</h1>
+        <p>Cyber Threat Intelligence Platform</p>
+    </div>
+
+    <form method="POST">
+        <div class="search-area">
+            <input name="url" placeholder="Paste URL or QR code link here" required>
+            <button>ANALYZE</button>
+        </div>
+    </form>
+
+    {% if not result %}
+    <div class="caution" id="cautionBox"></div>
+    {% endif %}
+
+    {% if result %}
+    <div class="analysis">
+        <p><b>Threat Type:</b> {{ result.threat_type }}</p>
+        <p><b>Page Intent:</b> Redirecting to verification or login page</p>
+
+        <div class="risk-bar">
+            <div class="risk-fill" style="width: {{ result.risk }}%"></div>
+        </div>
+
+        <p><b>Detected Indicators:</b></p>
+        {% for i in result.indicators %}
+            <span class="tag">{{ i }}</span>
+        {% endfor %}
+
+        {% if result.link_seen_before %}
+        <p style="margin-top:10px; color:#38bdf8;">
+            🔁 <b>History:</b> This exact link was checked before.
+            Previous result: <b>{{ result.previous_link_result }}</b>
+        </p>
+        {% elif result.domain_seen_before %}
+        <p style="margin-top:10px; color:#22c55e;">
+            🌐 <b>Domain Memory:</b> This domain was analyzed earlier.
+            Previous activity: <b>{{ result.previous_domain_result }}</b>
+        </p>
+        {% endif %}
+
+        {% if result.threat_type != "Safe" %}
+        <p><b>Why this is risky:</b>
+        The link shows suspicious patterns such as misleading keywords,
+        unusual URL structure, and hidden redirections.</p>
+        {% endif %}
+
+        {% if result.threat_type == "Safe" %}
+            <p class="safe"><b>Recommended Action:</b> You can safely browse this link.</p>
+        {% elif result.threat_type == "Suspicious Link" %}
+            <p class="warn"><b>Recommended Action:</b> Proceed with caution.</p>
+        {% else %}
+            <p class="danger"><b>Recommended Action:</b> Do NOT click this link.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="rizz-board">
+        <div class="rizz-title">RizzBOT</div>
+        <p>Are you…?</p>
+
+        <div class="rizz-buttons">
+            <button type="button" onclick="showRizz('male')">Male</button>
+            <button type="button" onclick="showRizz('female')">Female</button>
+        </div>
+
+        <div class="rizz-line" id="rizzText"></div>
+    </div>
+
+</div>
+
+<script>
+const cautions = [
+ "Never trust urgent messages asking for credentials.",
+ "Shortened URLs can hide dangerous destinations.",
+ "Always verify the domain before clicking links.",
+ "Cyber scams often look genuine.",
+ "Legitimate services don’t pressure users."
+];
+
+const cb = document.getElementById("cautionBox");
+if (cb) cb.innerText = cautions[Math.floor(Math.random()*cautions.length)];
+
+const rizz = {
+ male: [
+  "Are you a secret? Because I don’t think I can share you.",
+  "They say the universe is 13.8 billion years old — took that long to make you.",
+  "I’m lost… can you give me directions to your heart?",
+  "Built different. Calm. Confident.",
+  "You don’t chase — you attract."
+ ],
+ female: [
+  "Are you a secret? Because I don’t think I can share you.",
+  "The universe waited 13.8 billion years just to create you.",
+  "I’m lost… can you give me directions to your heart?",
+  "Grace with strength — unmatched.",
+  "You turn presence into impact."
+ ]
+};
+
+function showRizz(type) {
+ const el = document.getElementById("rizzText");
+ el.innerText = "";
+ setTimeout(() => {
+   el.innerText = rizz[type][Math.floor(Math.random()*rizz[type].length)];
+ }, 50);
+}
+</script>
+
+</body>
+</html>
