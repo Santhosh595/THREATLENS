@@ -1,73 +1,73 @@
 # THREATLENS
 
-## Project Overview
-THREATLENS is a powerful and comprehensive threat analysis platform that provides users with tools to assess, identify, and mitigate potential cybersecurity threats. The platform aims to streamline the threat analysis process and enhance overall security posture in organizations.
+A lightweight web app that analyzes URLs for phishing indicators before you click them. Paste a link, get an explainable risk verdict — the indicators that drove the decision, the page intent, and a recommended action.
 
-## Installation Instructions
-1. **Clone the Repository**:  
-   Use the following command to clone the repository:
-   ```bash
-   git clone https://github.com/Santhosh595/THREATLENS.git
-   ```  
+## How it works
 
-2. **Navigate to the Project Directory**:  
-   ```bash
-   cd THREATLENS
-   ```  
+`app.py` scores each URL against a small set of phishing heuristics and buckets the result into one of three threat levels:
 
-3. **Install the Dependencies**:  
-   Make sure you have [Node.js](https://nodejs.org/) installed, then run:
-   ```bash
-   npm install
-   ```  
+| Threat level | Risk score | Meaning |
+|---|---|---|
+| Safe | < 40 | No meaningful indicators found |
+| Suspicious Link | 40–69 | Some phishing characteristics present |
+| Credential Phishing | ≥ 70 | Strong login / credential-theft patterns |
 
-4. **Start the Application**:  
-   ```bash
-   npm start
-   ```  
+Each analysis checks the following indicators (all add to the risk score, which starts at 10 and caps at 100):
 
-## Usage Guide
-- After starting the application, open your web browser and navigate to `http://localhost:3000`.
-- Register a new account or log in with an existing account.
-- Use the dashboard to access various tools and resources for threat analysis.
+- **No HTTPS encryption** (+20) — the URL scheme is not `https`
+- **Shortened URL** (+30) — `bit.ly`, `tinyurl`, `t.co`, `goo.gl` in the URL
+- **Login / verification keyword** (+25) — `login`, `verify`, `update`, `secure` in the URL
+- **IP-based URL** (+30) — the host is a raw numeric IP
 
-## Tech Stack
-- **Frontend**: React.js
-- **Backend**: Node.js, Express
-- **Database**: MongoDB
-- **Authentication**: JWT
-- **Deployment**: Docker
+Every analysis also records the link and its domain, so repeat visits show whether the exact URL (or just the domain) was checked before, and what it was classified as. This history lives in memory and resets when the process restarts.
 
 ## Features
-- Real-time threat monitoring and alerts.
-- Comprehensive threat database.
-- User-friendly dashboard for visualization.
-- Role-based access control for enhanced security.
-- Detailed reporting tools for compliance.
 
-## Contributing Guidelines
-1. **Fork the Repository**:  
-   Create a fork of the project on GitHub.
+- URL threat analysis with explainable output: threat type, page intent, detected indicators, recommended action
+- Animated risk-bar visualization (green → yellow → red)
+- Link and domain history tracking within the running process
+- Single-page interface, no database required
 
-2. **Create Your Feature Branch**:  
-   ```bash
-   git checkout -b feature/YourFeature
-   ```  
+## Project structure
 
-3. **Commit Your Changes**:  
-   ```bash
-   git commit -m 'Add some feature'
-   ```  
+```
+THREATLENS/
+├── app.py            # Flask app + URL analysis logic (entry point)
+├── app/              # Flask app-factory scaffolding (SQLAlchemy models)
+│   ├── __init__.py
+│   └── models.py
+├── templates/
+│   └── index.html    # Single-page UI
+├── requirements.txt
+├── .env.example
+└── LICENSE           # MIT
+```
 
-4. **Push to the Branch**:  
-   ```bash
-   git push origin feature/YourFeature
-   ```  
+## Run locally
 
-5. **Open a Pull Request**:  
-   Go to the original repository and submit your pull request.
+Requires Python 3.8+.
 
-## Example Screenshots
-- **Dashboard**: ![Dashboard Screenshot](https://via.placeholder.com/800x400?text=Dashboard+Screenshot)
-- **Threat Analysis Tool**: ![Threat Analysis Tool Screenshot](https://via.placeholder.com/800x400?text=Threat+Analysis+Tool+Screenshot)
-- **Reporting Interface**: ![Reporting Interface Screenshot](https://via.placeholder.com/800x400?text=Reporting+Interface+Screenshot)
+```bash
+git clone https://github.com/Santhosh595/THREATLENS.git
+cd THREATLENS
+
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+python app.py
+```
+
+Then open <http://127.0.0.1:5000> in your browser.
+
+## Deployment
+
+The app is a plain Flask app and deploys as-is to Render, Railway, or PythonAnywhere. For production, serve it with Gunicorn:
+
+```bash
+gunicorn app:app
+```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
