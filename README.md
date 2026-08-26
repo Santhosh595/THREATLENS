@@ -18,6 +18,7 @@ Each analysis checks the following indicators (all add to the risk score, which 
 - **Shortened URL** (+30) — `bit.ly`, `tinyurl`, `t.co`, `goo.gl` in the URL
 - **Login / verification keyword** (+25) — `login`, `verify`, `update`, `secure` in the URL
 - **IP-based URL** (+30) — the host is a raw numeric IP
+- **Punycode / Homograph Host** (+30) — any dot-separated host label starting with `xn--` (raw unicode hosts are normalized via IDNA first); possible lookalike of another site, the indicator shows what the label decodes to
 
 Every analysis also records the link and its domain, so repeat visits show whether the exact URL (or just the domain) was checked before, and what it was classified as. This history lives in memory and resets when the process restarts.
 
