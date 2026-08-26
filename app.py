@@ -6,6 +6,37 @@ app = Flask(__name__)
 checked_links = {}
 checked_domains = {}
 
+
+def _first_punycode_label(hostname):
+    """First DNS label using punycode (leading "xn--" ACE prefix), or None.
+
+    Accepts raw unicode hosts too: they are normalized through IDNA encoding
+    before scanning, so "аpple.com" and its encoded twin both match. A label
+    merely *containing* "xn--" mid-string never matches — per IDNA only a
+    leading prefix marks an encoded label.
+
+    Returns a (label, decoded_or_None) tuple so callers can show what the
+    host actually resolves to.
+    """
+    if not hostname:
+        return None
+    hosts = [hostname]
+    try:
+        hosts.append(hostname.encode("idna").decode("ascii"))
+    except (UnicodeError, ValueError):
+        pass
+    for host in hosts:
+        for label in host.split("."):
+            if label.startswith("xn--"):
+                decoded = None
+                try:
+                    decoded = label.encode("ascii").decode("idna")
+                except (UnicodeError, ValueError):
+                    pass
+                return label, decoded
+    return None
+
+
 def analyze_url(url):
     indicators = []
     risk = 10
@@ -32,6 +63,15 @@ def analyze_url(url):
 
     if domain.replace(".", "").isdigit():
         indicators.append("IP-based URL")
+        risk += 30
+
+    punycode = _first_punycode_label(parsed.hostname or "")
+    if punycode:
+        label, decoded = punycode
+        if decoded:
+            indicators.append(f"Punycode / Homograph Host ({label} resolves to '{decoded}')")
+        else:
+            indicators.append(f"Punycode / Homograph Host ({label})")
         risk += 30
 
     if risk >= 70:
