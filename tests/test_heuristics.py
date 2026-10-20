@@ -89,6 +89,49 @@ class AnalyzeURLTestCase(unittest.TestCase):
             ],
         )
 
+    # ---- punycode / homograph host heuristic -----------------------------
+
+    def test_punycode_host_fires_and_shows_decoded_label(self):
+        # The classic homograph demo: this ACE label resolves to a string of
+        # Cyrillic lookalikes ("аррӏе"), not "apple".
+        r = analyze_url("https://xn--80ak6aa92e.com/")
+        fired = [i for i in r["indicators"] if i.startswith("Punycode / Homograph Host")]
+        self.assertEqual(len(fired), 1)
+        self.assertIn("resolves to", fired[0])
+        self.assertEqual(r["risk"], 40)  # 10 base + 30 -> exactly the Suspicious bound
+        self.assertEqual(r["threat_type"], "Suspicious Link")
+
+    def test_punycode_fires_on_any_dns_label_not_just_first(self):
+        # Encoded label sits mid-host; the heuristic must still catch it.
+        r = analyze_url("https://secure.xn--80ak6aa92e.com/login")
+        self.assertTrue(
+            any(i.startswith("Punycode / Homograph Host") for i in r["indicators"])
+        )
+        self.assertEqual(r["risk"], 65)  # 10 + 25 (login path) + 30
+
+    def test_raw_unicode_host_normalizes_to_punycode_and_fires(self):
+        # Leading Cyrillic 'а': the hostname never shows ASCII "xn--" text,
+        # but its IDNA form is one encoded label.
+        r = analyze_url("https://\u0430pple.com/")
+        fired = [i for i in r["indicators"] if i.startswith("Punycode / Homograph Host")]
+        self.assertTrue(fired)
+        self.assertIn("xn--", fired[0])
+        self.assertEqual(r["risk"], 40)
+
+    def test_xn__outside_leading_labels_stays_silent(self):
+        # 'xn--' only in the query string of an otherwise clean URL.
+        query_only = analyze_url("https://example.com/?next=https://xn--80ak6aa92e.com")
+        self.assertEqual(query_only["indicators"], [])
+        # 'xn--' inside a label but not leading it — not an ACE prefix.
+        mid_label = analyze_url("https://tricky-xn--label.example.com/")
+        self.assertEqual(mid_label["indicators"], [])
+        # 'xn--' only in the path.
+        path_only = analyze_url("https://example.com/xn--path")
+        self.assertEqual(path_only["indicators"], [])
+        for clean in (query_only, mid_label, path_only):
+            self.assertEqual(clean["risk"], 10)
+            self.assertEqual(clean["threat_type"], "Safe")
+
     # ---- exact threshold boundaries -------------------------------------
 
     def test_risk_39_band_boundary_is_inclusive_at_40(self):
