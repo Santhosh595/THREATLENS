@@ -1,5 +1,10 @@
-flask
-gunicorn
-flask-sqlalchemy
-flask-cors
-flask-limiter
+# Direct dependencies, pinned.
+#
+# These were bare names, so every install silently floated to whatever was
+# newest. A frozen resolution of the whole tree (including transitive deps)
+# is in requirements.lock.txt.
+flask==3.1.3
+flask-cors==6.0.5
+flask-limiter==4.1.1
+flask-sqlalchemy==3.1.1
+gunicorn==26.2.0

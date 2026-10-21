@@ -1,5 +1,9 @@
 # THREATLENS
 
+[![CI](https://github.com/Santhosh595/THREATLENS/actions/workflows/ci.yml/badge.svg)](https://github.com/Santhosh595/THREATLENS/actions/workflows/ci.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 A lightweight web app that analyzes URLs for phishing indicators before you click them. Paste a link, get an explainable risk verdict — the indicators that drove the decision, the page intent, and a recommended action.
 
 ## How it works
@@ -60,6 +64,19 @@ python app.py
 ```
 
 Then open <http://127.0.0.1:5000> in your browser.
+
+### Run tests
+
+```bash
+pip install -r requirements.txt
+pip install pytest
+pytest tests/
+```
+
+The suite covers the URL-scoring heuristics — each one is checked against a
+crafted URL that must fire it and clean URLs that must not — plus the exact
+risk-band boundaries (40 suspicious, 70 phishing) and the risk cap. It needs
+no network and no API key, because `analyze_url()` is pure string analysis.
 
 ## Deployment
 
