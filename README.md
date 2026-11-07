@@ -38,12 +38,13 @@ Every analysis also records the link and its domain, so repeat visits show wheth
 ```
 THREATLENS/
 ├── app.py            # Flask app + URL analysis logic (entry point)
-├── app/              # Flask app-factory scaffolding (SQLAlchemy models)
-│   ├── __init__.py
-│   └── models.py
 ├── templates/
 │   └── index.html    # Single-page UI
+├── tests/
+│   └── test_heuristics.py
+├── pyproject.toml
 ├── requirements.txt
+├── requirements.lock.txt
 ├── .env.example
 └── LICENSE           # MIT
 ```

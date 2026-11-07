@@ -115,5 +115,11 @@ def index():
         result = analyze_url(request.form["url"])
     return render_template("index.html", result=result)
 
-if __name__ == "__main__":
+
+def main():
+    """Console-script entry point (threatlens command)."""
     app.run()
+
+
+if __name__ == "__main__":
+    main()
