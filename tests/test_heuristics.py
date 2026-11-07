@@ -6,8 +6,7 @@ band field mapping, and the in-memory history semantics.
 
 Run: python3 -m unittest discover -s tests -v   (or pytest)
 
-Note: app.py is loaded by file path because the repo also ships an ``app/``
-package (the Flask-SQLAlchemy factory), which would shadow ``import app``.
+Note: app.py is loaded by file path to avoid the repo root being on sys.path.
 """
 
 from __future__ import annotations
